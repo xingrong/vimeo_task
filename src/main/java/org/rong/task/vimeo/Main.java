@@ -1,10 +1,10 @@
-package org.rong.task.entry;
+package org.rong.task.vimeo;
 
 import java.util.ArrayList;
 
 import org.apache.ibatis.session.SqlSession;
-import org.rong.task.db.dao.default_task.DataDao;
-import org.rong.task.db.model.default_task.Data;
+import org.rong.task.db.dao.movies.MovieSearchDao;
+import org.rong.task.db.model.movies.MovieSearch;
 import org.rong.task.mybatis.MybatisSessionFactory;
 import org.rong.task.util.State;
 import org.rong.task.util.TaskConstants;
@@ -34,11 +34,11 @@ public class Main {
 			state = new State(args);
 			MybatisSessionFactory.init(state);
 			SqlSession session_app_data = MybatisSessionFactory
-					.getSqlSessionFactory("default_task").openSession();
-			DataDao dataDao = session_app_data.getMapper(DataDao.class);
-			ArrayList<Data> dataList = dataDao.getAllName();
+					.getSqlSessionFactory("vimeo_task").openSession();
+			MovieSearchDao dataDao = session_app_data.getMapper(MovieSearchDao.class);
+			ArrayList<MovieSearch> dataList = dataDao.getAll();
 			for (int i = 0; i < dataList.size(); ++i) {
-				logger.info("data name => " + dataList.get(i).getName());
+				logger.info("data name => " + dataList.get(i).toString());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
