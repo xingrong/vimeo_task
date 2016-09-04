@@ -35,7 +35,8 @@ public class WriterQueue {
 		lock.lock();
 
 		try {
-			while (queue.size() == TaskConstants.MAX_QUEUE_SIZE) {
+			while (queue.size() == TaskConstants.MAX_QUEUE_SIZE
+					&& OutputTask.loop) {
 				logger.warn("warning: data queue is full => " + queue.size());
 				notFull.await();
 			}

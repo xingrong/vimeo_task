@@ -1,16 +1,27 @@
 package org.rong.task.vimeo;
 
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
+
 import org.rong.task.mybatis.MybatisSessionFactory;
 import org.rong.task.util.DateUtil;
-import org.rong.task.util.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
 
+/**
+ * Init vimeo task config
+ * 
+ * @author Rong
+ * 
+ */
 public class VimeoInit {
 	final static Logger logger = LoggerFactory.getLogger(VimeoInit.class);
 
@@ -26,16 +37,17 @@ public class VimeoInit {
 	public static String dataFile;
 
 	public VimeoInit(String confFile) {
-		String[] args = new String[2];
-		args[0] = "-c";
-		args[1] = confFile;
-		State state = null;
-		Properties props;
-		String property = "";
+		Properties props = new Properties();
 		try {
-			state = new State(args);
-			props = state.props;
-			MybatisSessionFactory.init(state);
+			InputStream in = new BufferedInputStream(new FileInputStream(
+					confFile));
+			props.load(in);
+		} catch (IOException e) {
+			logger.error("can't load config file: " + confFile);
+		}
+		try {
+			String property = "";
+			MybatisSessionFactory.init(props);
 
 			property = "tokenList";
 			if (props.getProperty(property) != null

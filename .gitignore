@@ -1,5 +1,7 @@
-/target/
 .classpath
 .project
 .settings/
-src/main/resources/
+target/
+bin/*.jar
+conf/
+data/

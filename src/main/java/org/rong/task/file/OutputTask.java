@@ -11,6 +11,10 @@ import org.rong.task.util.TaskConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Background thread to output data to file
+ * 
+ */
 public class OutputTask implements Runnable {
 	final static Logger logger = LoggerFactory.getLogger(OutputTask.class);
 	private String fileName;
@@ -24,11 +28,7 @@ public class OutputTask implements Runnable {
 	public void run() {
 
 		while (OutputTask.loop) {
-			try {
-				sleep(TaskConstants.OUTPUT_INTERNAL);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+			sleep(TaskConstants.OUTPUT_INTERNAL);
 			LinkedList<String> list = WriterQueue.getQueue().takeAll();
 			writeToDisk(list);
 			list = null;
@@ -45,6 +45,9 @@ public class OutputTask implements Runnable {
 			return;
 		}
 		File outputFile = new File(fileName);
+		if (!outputFile.getParentFile().exists()) {
+			outputFile.getParentFile().mkdirs();
+		}
 		if (outputFile == null || !outputFile.exists()) {
 			try {
 				outputFile.createNewFile();
@@ -84,7 +87,11 @@ public class OutputTask implements Runnable {
 		}
 	}
 
-	private void sleep(int millis) throws InterruptedException {
-		Thread.sleep(millis);
+	private void sleep(long millis) {
+		try {
+			Thread.sleep(millis);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
 	}
 }

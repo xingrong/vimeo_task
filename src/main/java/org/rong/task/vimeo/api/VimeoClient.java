@@ -23,6 +23,11 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONObject;
 
+/**
+ * Vimeo API client
+ * @author Rong
+ *
+ */
 public class VimeoClient {
 	private static final String VIMEO_SERVER = "https://api.vimeo.com";
 	private String token;

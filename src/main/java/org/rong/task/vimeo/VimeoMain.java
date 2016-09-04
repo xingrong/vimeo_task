@@ -2,6 +2,7 @@ package org.rong.task.vimeo;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -33,8 +34,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 public class VimeoMain {
 	final static Logger logger = LoggerFactory.getLogger(VimeoMain.class);
 	private static VimeoMain vimeoMain = null;
-	public static ArrayList<MovieSearch> movieSearchList;
-	public static int movieSearchListIndex = 0;
+	private static LinkedList<MovieSearch> movieSearchListQueue = new LinkedList<MovieSearch>();
 
 	/**
 	 * singleton schema
@@ -52,10 +52,10 @@ public class VimeoMain {
 		new VimeoInit(TaskConstants.CONF_DIR + "/vimeo.properties");
 	}
 
-	public void process() {
+	public void runTask() {
 		getMovieSearchList();
 		startOutputTask();
-		searchMovie();
+		searchMovies();
 		stopOutputTask();
 		uploadToS3();
 	}
@@ -64,13 +64,16 @@ public class VimeoMain {
 		SqlSession session = MybatisSessionFactory.getSqlSessionFactory(
 				"vimeo_task").openSession();
 		MovieSearchDao dataDao = session.getMapper(MovieSearchDao.class);
-		movieSearchList = dataDao.getAll();
+		ArrayList<MovieSearch> movieSearchList = dataDao.getAll();
+		for (int i = 0; i < movieSearchList.size(); i++) {
+			movieSearchListQueue.add(movieSearchList.get(i));
+		}
 		session.commit();
 		session.close();
 	}
 
 	private void startOutputTask() {
-		OutputTask outputTask = new OutputTask(TaskConstants.DATA_DIR
+		OutputTask outputTask = new OutputTask(TaskConstants.DATA_DIR + "/"
 				+ VimeoInit.dataFile);
 		new Thread(outputTask).start();
 	}
@@ -79,7 +82,7 @@ public class VimeoMain {
 		OutputTask.loop = false;
 	}
 
-	private void searchMovie() {
+	private void searchMovies() {
 		ExecutorService exec = Executors
 				.newFixedThreadPool(VimeoInit.threadCount);
 		VimeoSearchThread[] threadList = new VimeoSearchThread[VimeoInit.threadCount];
@@ -97,7 +100,7 @@ public class VimeoMain {
 			e.printStackTrace();
 		}
 		long threadEndTime = System.currentTimeMillis();
-		logger.info("VimeoSearch => " + VimeoInit.threadCount
+		logger.info("searchMovies => " + VimeoInit.threadCount
 				+ " Threads all done with " + (threadEndTime - threadStartTime)
 				/ 1000 + " seconds");
 	}
@@ -107,7 +110,8 @@ public class VimeoMain {
 				VimeoInit.accessKeyID, VimeoInit.secretAccessKey));
 		try {
 			logger.info("Uploading to S3");
-			File file = new File(TaskConstants.DATA_DIR + VimeoInit.dataFile);
+			File file = new File(TaskConstants.DATA_DIR + "/"
+					+ VimeoInit.dataFile);
 			s3client.putObject(new PutObjectRequest(VimeoInit.s3BucketName,
 					VimeoInit.dataFile, file));
 		} catch (AmazonServiceException ase) {
@@ -130,13 +134,12 @@ public class VimeoMain {
 		}
 	}
 
-	public synchronized static MovieSearch getNextSearch() {
-		MovieSearch movieSearch = null;
-		if (movieSearchListIndex < movieSearchList.size()) {
-			movieSearch = movieSearchList.get(movieSearchListIndex++);
-			logger.info("movieSearchListIndex : " + movieSearchListIndex);
-		}
-		return movieSearch;
+	public synchronized static MovieSearch getMovieSearch() {
+		return movieSearchListQueue.poll();
+	}
+
+	public synchronized static void returnMovieSearch(MovieSearch movieSearch) {
+		movieSearchListQueue.add(movieSearch);
 	}
 
 	public static void pushToDynamoDB(MovieSearch movieSearch, int hour_total) {

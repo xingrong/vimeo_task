@@ -4,15 +4,17 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Properties;
-
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.rong.task.util.TaskConstants;
-import org.rong.task.util.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Manage Mybatis config and session
+ *
+ */
 public class MybatisSessionFactory {
 	final static Logger logger = LoggerFactory
 			.getLogger(MybatisSessionFactory.class);
@@ -20,11 +22,10 @@ public class MybatisSessionFactory {
 	static String defaultEnvironment = "";
 	static boolean initialized = false;
 
-	public static void init(State state) throws Exception {
+	public static void init(Properties props) throws Exception {
 		if (initialized) {
 			return;
 		}
-		Properties props = state.props;
 		if (props.getProperty("mybatis.confFile") != null
 				&& !props.getProperty("mybatis.confFile").trim().equals("")) {
 
@@ -52,20 +53,17 @@ public class MybatisSessionFactory {
 				in.close();
 			}
 		} else {
-			logger.error("invalid mybatis.confFile: " + state.configFile);
-			throw new Exception("invalid mybatis.confFile: " + state.configFile);
+			logger.error("Invalid mybatis.confFile!");
 		}
 		initialized = true;
 	}
 
 	public static SqlSession openSession() {
 		return getSqlSessionFactory().openSession();
-
 	}
 
 	public static SqlSession openSession(String environment) {
 		return getSqlSessionFactory(environment).openSession();
-
 	}
 
 	public static SqlSessionFactory getSqlSessionFactory() {
