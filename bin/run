@@ -1,5 +1,5 @@
 #!/bin/bash
-binary="task.jar"
+binary="task-jar-with-dependencies.jar"
 main="org.rong.task.entry.Main"
 logfile="task.log"
 MAVEN_OPTS="-Xms256m -Xmx1024m"
@@ -23,7 +23,7 @@ echo -e "\033[36mreplica=$replica\033[0m"
 echo -e "\033[36mshard=$shard\033[0m"
 
 base_dir=/apps/svr/$inst/
-bin_dir=$base_dir"bin/"
+bin_dir=$base_dir"target/"
 conf_dir=$base_dir"conf/"
 log_dir=/apps/logs/$inst/
 mkdir -p $log_dir

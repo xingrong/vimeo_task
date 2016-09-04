@@ -47,7 +47,12 @@
 		</dependency>
 		<dependency>
 			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk</artifactId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.11.31</version>
+		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-dynamodb</artifactId>
 			<version>1.11.31</version>
 		</dependency>
 	</dependencies>
@@ -64,15 +69,6 @@
 						<source>1.7</source>
 						<target>1.7</target>
 						<encoding>UTF-8</encoding>
-					</configuration>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-jar-plugin</artifactId>
-					<version>2.3.1</version>
-					<configuration>
-						<outputDirectory>bin/</outputDirectory>
 					</configuration>
 				</plugin>
 
@@ -104,6 +100,9 @@
 							<descriptorRef>jar-with-dependencies</descriptorRef>
 						</descriptorRefs>
 						<archive>
+							<manifest>
+								<mainClass>org.rong.task.entry.Main</mainClass>
+							</manifest>
 						</archive>
 					</configuration>
 					<executions>
