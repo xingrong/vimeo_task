@@ -1,7 +1,10 @@
 package org.rong.task.vimeo;
 
 import java.net.URLEncoder;
+
 import org.json.JSONArray;
+import org.rong.task.db.model.movies.MovieSearch;
+import org.rong.task.file.WriterQueue;
 import org.rong.task.vimeo.api.VimeoClient;
 import org.rong.task.vimeo.api.VimeoResponse;
 import org.slf4j.Logger;
@@ -13,6 +16,7 @@ public class VimeoSearchThread implements Runnable {
 
 	private VimeoClient vimeoClient;
 	private int rateLimitRemaining;
+	private MovieSearch movieSearch;
 
 	public VimeoSearchThread(String token) {
 		super();
@@ -21,28 +25,27 @@ public class VimeoSearchThread implements Runnable {
 	}
 
 	public void run() {
-		for (String query = VimeoSearch.getNextQuery(); query != null; query = VimeoSearch
-				.getNextQuery()) {
-			logger.info("query : " + query);
-			if (rateLimitRemaining <= VimeoConf.page) {
+		for (this.movieSearch = VimeoMain.getNextSearch(); this.movieSearch != null; this.movieSearch = VimeoMain
+				.getNextSearch()) {
+			if (rateLimitRemaining <= VimeoInit.page) {
 				try {
 					Thread.sleep(15 * 60 * 1000);
 				} catch (InterruptedException e) {
-					e.printStackTrace();
+					logger.error(e.getMessage());
 				}
 			}
-			searchVideos(query);
+			searchVideos(this.movieSearch.getSearch_term());
 		}
 	}
 
 	private void searchVideos(String query) {
-		int playsSum = 0;
-		for (int page = 1; page <= VimeoConf.page; page++) {
+		int hour_total = 0;
+		for (int page = 1; page <= VimeoInit.page; page++) {
 			VimeoResponse vimeoResponse = null;
 			try {
 				vimeoResponse = vimeoClient.searchVideos(
 						URLEncoder.encode(query, "utf-8"), page,
-						VimeoConf.per_page);
+						VimeoInit.per_page);
 				if (vimeoResponse.getStatusCode() == 429) {
 					logger.error("vimeo api response status code error : "
 							+ vimeoResponse.getHeaders().toString());
@@ -59,16 +62,16 @@ public class VimeoSearchThread implements Runnable {
 					if (!playsString.equals("null")) {
 						playsCount = Integer.parseInt(playsString);
 					}
-					playsSum += playsCount;
+					hour_total += playsCount;
 				}
+				WriterQueue.getQueue().put(vimeoResponse.toString());
 				Thread.sleep(100);
 			} catch (Exception e) {
-				e.printStackTrace();
-				logger.error(vimeoResponse.toString());
+				logger.error(e.getMessage());
 				continue;
 			}
 		}
-		logger.info(query + " => " + playsSum);
 		logger.info("rate remaining => " + this.rateLimitRemaining);
+		VimeoMain.pushToDynamoDB(this.movieSearch, hour_total);
 	}
 }

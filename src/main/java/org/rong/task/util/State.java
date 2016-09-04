@@ -6,11 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Properties;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alibaba.fastjson.JSON;
 
 public class State {
 	final static Logger logger = LoggerFactory.getLogger(State.class);
@@ -45,9 +42,5 @@ public class State {
 				// other args
 			}
 		}
-	}
-
-	public String toString() {
-		return JSON.toJSONString(this);
 	}
 }
